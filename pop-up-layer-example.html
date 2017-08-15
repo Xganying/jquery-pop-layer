@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <title>弹出层（弹框）</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            font: 14px / 1.5 "微软雅黑",Verdana,Tahoma,Arial,sans-serif,"宋体";
+            line-height: 30px;
+        }
+        /* 登录、注册区域 */
+        .login, .register{
+            text-align: center; 
+        }
+        /* 登录、注册标题 */
+        h4{
+            font-size: 20px;
+            line-height: 50px;
+            margin: 0 auto;
+        }
+        label{
+            margin-right: 10px;
+            color: #888;
+        }
+       /* 用户名、密码输入框 */
+        .username,.password,.repassword{
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 10px 5px;
+            width: 250px;
+        }
+        /* 每个输入框之间间距 */
+        .item{
+            margin: 20px auto;
+        }
+        /* 提交按钮 */
+        .logSubmitBtn,.resSubmitBtn{
+            background: #e40;
+            border: 1px solid #e40;
+            border-radius: 5px;
+            padding: 10px 5px;
+            width: 262px;
+            margin: 5px 0 0 21px;
+            color: #fff;
+        }
+        /* 信息填写错误时提示 */
+        .error-msg{
+            color: #e40;
+        }
+        /* 弹出层遮罩 */
+        .layer-mask{
+            display: none;      /* 遮罩默认开始是不显示的 */
+            z-index: 99999; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            opacity: 0.5;       /* 设置透明度为50% */
+        }
+        /* 弹出层窗体 */
+        .layer-pop{
+            display: none;      /* 默认开始是不显示的 */
+            z-index: 100000;
+            position: fixed;
+            top: 0;             /* 设置水平垂直居中 */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            width: 400px;
+            height: 300px;
+            background: #fff;
+        }
+        /* 弹出层关闭按钮 */
+        .layer-close{
+            float: right;
+            width: 24px;
+            height: 24px;
+            border:3px solid #fff;
+            text-align: center;       /* 设置内容居中显示 */
+            line-height: 24px;        /* 设置内容的高度 */
+            border-radius: 50%;
+            background: #eee;
+            margin: -12px -12px 0 0;
+        }
+        /* 添加鼠标滑过的样式 */
+        .layer-close:hover{
+            cursor: pointer;
+            background: #ccc;
+            color: #fff;
+        }
+    </style>
+
+</head>
+<body>
+    
+    <button id="loginBtn" class="login">登录</button>
+    <button id="registerBtn" class="register">注册</button>
+
+    <!-- 弹出层 -->
+    <div id="layer-mask" class="layer-mask"></div>           <!--弹出层遮罩-->
+    <div id="layer-pop" class="layer-pop">                   <!--弹出层窗体-->      
+        <div id="layer-close" class="layer-close">×</div>    <!--弹出层关闭按钮-->       
+        <div id="layer-content" class="layer-content"></div> <!--弹出层内容区域-->
+    </div>
+    <!-- 登录窗体 -->
+    <div id="loginHtml" style="display: none;">
+        <div class="login">
+            <h4 class="title">登 录</h4>
+            <div class="item">
+                <label>账&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</label>
+                <input type="text" id="username" class="username" name="username" placeholder="手机号/邮箱/用户名">
+                <p class="error-msg"></p>
+            </div>
+            <div class="item">
+                <label>密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码</label>
+                <input type="password" id="password" class="password" name="password" placeholder="请输入密码">
+            </div>
+            <div class="item">
+                <label>&nbsp;</label>
+                <input type="submit" id="logSubmitBtn" class="logSubmitBtn" value="填写好了">
+            </div>
+        </div>
+    </div>
+    <!-- 注册窗体 -->
+    <div id="registerHtml" style="display: none;">
+        <div class="register">
+                <h4 class="title">注 册</h4>
+                <div class="item">
+                    <label>账&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</label>
+                    <input type="text" id="username" class="username" name="username" placeholder="手机号/邮箱/用户名">
+                    <p class="error-msg"></p>
+                </div>
+                <div class="item">
+                    <label>密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码</label>
+                    <input type="password" id="password" class="password" name="password" placeholder="请输入密码">
+                </div>
+                <div class="item">
+                    <label>重复密码</label>
+                    <input type="password" id="repassword" class="repassword" name="repassword"placeholder="再次输入密码">
+                </div>
+                <div class="item">
+                    <label>&nbsp;</label>
+                    <input type="submit" id="resSubmitBtn" class="resSubmitBtn" value="填写好了">
+                </div>
+            </div>
+    </div>
+
+
+<script>
+  
+    $(document).ready(function($){
+
+        // 弹出层关闭回调函数
+        function closeCallback(){
+            $(".error-msg").html("");          
+        }
+        // 关闭弹出层
+        function hideLayer(){
+            $("#layer-mask").hide();             // 隐藏弹出层遮罩
+            $("#layer-pop").hide();              // 隐藏弹出层窗体
+        }
+        // 显示弹出层函数
+        function showLayer(html, width, height, closeCallback){
+            $("#layer-mask").show();             // 显示弹出层遮罩
+            $("#layer-pop").show();              // 显示弹出层窗体
+            $("#layer-pop").css({                // 设置弹出层窗体样式
+                width: width,
+                height: height
+            });
+            $("#layer-content").html(html);      // 填充弹出层窗体内容
+            $("#layer-close").click(function(){
+                hideLayer();                     //关闭弹出层
+                closeCallback();                 //关闭弹出层的回调函数
+            })
+        }
+        // 点击登录按钮显示弹出层
+        $("#loginBtn").click(function(){
+            var loginHtml = $("#loginHtml").html();          // 获取登录窗体的代码
+            showLayer(loginHtml, 500, 300, closeCallback);   // 显示弹出层
+
+            $("#logSubmitBtn").click(function(){             // 简单的登录表单验证
+                var username = $("input[name='username']").val();
+                var password = $("input[name='password']").val();
+                if(username === 'Cynthia' && password === '123456'){
+                    alert("登录成功");
+                }else{
+                    $(".error-msg").html("用户名或密码不正确");
+                }
+            });
+        })
+        // 点击注册按钮显示弹出层
+        $("#registerBtn").click(function(){
+            var registerHtml = $("#registerHtml").html();     // 获取注册窗体的代码
+            showLayer(registerHtml, 500, 350, closeCallback); // 隐藏弹出层
+
+             $("#resSubmitBtn").click(function(){             // 简单的注册表单验证
+                var username = $("input[name='username']").val();
+                var password = $("input[name='password']").val();
+                var repassword = $("input[name='repassword']").val(); 
+                if(username === 'Cynthia' && password === '123456' && password === repassword){
+                    alert("注册成功");
+                }else{
+                    $(".error-msg").html("用户名或密码填写不对");
+                }     
+            });
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
